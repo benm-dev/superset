@@ -311,23 +311,29 @@ if (!gotTheLock) {
 			}
 			if (process.platform === "win32") {
 				const winDir = process.env.WINDIR || "C:\\Windows";
-				return [
-					path.join(winDir, "Fonts"),
-					path.join(
-						process.env.LOCALAPPDATA || "",
-						"Microsoft",
-						"Windows",
-						"Fonts",
-					),
-				].filter(Boolean);
+				const dirs = [path.join(winDir, "Fonts")];
+				if (process.env.LOCALAPPDATA) {
+					dirs.push(
+						path.join(
+							process.env.LOCALAPPDATA,
+							"Microsoft",
+							"Windows",
+							"Fonts",
+						),
+					);
+				}
+				return dirs;
 			}
 			// Linux
-			return [
-				"/usr/share/fonts",
-				"/usr/local/share/fonts",
-				path.join(process.env.HOME || "", ".local/share/fonts"),
-				path.join(process.env.HOME || "", ".fonts"),
-			];
+			const dirs = ["/usr/share/fonts", "/usr/local/share/fonts"];
+			const home = process.env.HOME;
+			if (home) {
+				dirs.push(
+					path.join(home, ".local/share/fonts"),
+					path.join(home, ".fonts"),
+				);
+			}
+			return dirs;
 		})();
 
 		if (SYSTEM_FONT_DIRS.length > 0) {
