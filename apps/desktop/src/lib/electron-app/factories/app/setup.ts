@@ -56,7 +56,16 @@ export async function makeAppSetup(
 	return window;
 }
 
-PLATFORM.IS_LINUX && app.disableHardwareAcceleration();
+// Linux/Wayland: enable native Wayland rendering via Ozone when a Wayland
+// compositor is detected (e.g. HyprLand, Sway, GNOME on Wayland).
+// The "auto" value lets Chromium pick between Wayland and X11 at runtime.
+if (PLATFORM.IS_LINUX) {
+	app.commandLine.appendSwitch("ozone-platform-hint", "auto");
+	// Only disable GPU acceleration on X11 — Wayland compositors rely on it.
+	if (!process.env.WAYLAND_DISPLAY) {
+		app.disableHardwareAcceleration();
+	}
+}
 
 // macOS Sequoia+: occluded window throttling can corrupt GPU compositor layers
 if (PLATFORM.IS_MAC) {

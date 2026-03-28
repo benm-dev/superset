@@ -43,8 +43,9 @@ export async function runTeardown({
 
 	try {
 		const shell =
-			process.env.SHELL ||
-			(process.platform === "darwin" ? "/bin/zsh" : "/bin/bash");
+			process.platform === "win32"
+				? process.env.COMSPEC || "cmd.exe"
+				: process.env.SHELL || "/bin/sh";
 		const supersetHomeDir =
 			process.env.SUPERSET_HOME_DIR || join(homedir(), SUPERSET_DIR_NAME);
 		const shellWrapperPaths = {

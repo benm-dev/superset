@@ -189,6 +189,28 @@ export function createApplicationMenu() {
 				{ role: "quit" },
 			],
 		});
+	} else {
+		// Windows / Linux: no native app menu — put these in a "File" menu
+		template.unshift({
+			label: "File",
+			submenu: [
+				{
+					label: "Settings",
+					accelerator: openSettingsAccelerator,
+					click: () => {
+						menuEmitter.emit("open-settings");
+					},
+				},
+				{
+					label: "Check for Updates...",
+					click: () => {
+						checkForUpdatesInteractive();
+					},
+				},
+				{ type: "separator" },
+				{ role: "quit" },
+			],
+		});
 	}
 
 	const menu = Menu.buildFromTemplate(template);
