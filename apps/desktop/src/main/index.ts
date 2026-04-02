@@ -298,14 +298,45 @@ if (!gotTheLock) {
 			.fromPartition("persist:superset")
 			.protocol.handle("superset-icon", iconProtocolHandler);
 
-		// Serve system fonts (e.g. SF Mono on macOS) via custom protocol
-		// so the renderer can use @font-face with font-src 'self' CSP
-		if (process.platform === "darwin") {
-			const SYSTEM_FONT_DIRS = [
-				"/System/Applications/Utilities/Terminal.app/Contents/Resources/Fonts",
-				"/System/Library/Fonts",
-				"/Library/Fonts",
-			];
+		// Serve system fonts via custom protocol so the renderer can use
+		// @font-face with font-src 'self' CSP. Each platform has its own
+		// standard font directories.
+		const SYSTEM_FONT_DIRS: string[] = (() => {
+			if (process.platform === "darwin") {
+				return [
+					"/System/Applications/Utilities/Terminal.app/Contents/Resources/Fonts",
+					"/System/Library/Fonts",
+					"/Library/Fonts",
+				];
+			}
+			if (process.platform === "win32") {
+				const winDir = process.env.WINDIR || "C:\\Windows";
+				const dirs = [path.join(winDir, "Fonts")];
+				if (process.env.LOCALAPPDATA) {
+					dirs.push(
+						path.join(
+							process.env.LOCALAPPDATA,
+							"Microsoft",
+							"Windows",
+							"Fonts",
+						),
+					);
+				}
+				return dirs;
+			}
+			// Linux
+			const dirs = ["/usr/share/fonts", "/usr/local/share/fonts"];
+			const home = process.env.HOME;
+			if (home) {
+				dirs.push(
+					path.join(home, ".local/share/fonts"),
+					path.join(home, ".fonts"),
+				);
+			}
+			return dirs;
+		})();
+
+		if (SYSTEM_FONT_DIRS.length > 0) {
 			const fontProtocolHandler = async (request: Request) => {
 				const url = new URL(request.url);
 				const filename = path.basename(url.pathname);

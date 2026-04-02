@@ -22,7 +22,10 @@ import type { ListSessionsResponse } from "main/lib/terminal-host/types";
 
 const POLL_INTERVAL_MS = 5000;
 
-/** Must have "Template" suffix for macOS dark/light mode support */
+/**
+ * macOS uses "Template" images for automatic dark/light mode tinting.
+ * Windows and Linux use the same PNG but without the template behaviour.
+ */
 const TRAY_ICON_FILENAME = "iconTemplate.png";
 
 function getTrayIconPath(): string | null {
@@ -77,7 +80,10 @@ function createTrayIcon(): Electron.NativeImage | null {
 		if (size.width > 22 || size.height > 22) {
 			image = image.resize({ width: 16, height: 16 });
 		}
-		image.setTemplateImage(true);
+		// Only macOS supports template images (auto dark/light tinting)
+		if (process.platform === "darwin") {
+			image.setTemplateImage(true);
+		}
 		return image;
 	} catch (error) {
 		console.warn("[Tray] Failed to load icon:", error);
@@ -303,10 +309,6 @@ async function updateTrayMenu(): Promise<void> {
 export function initTray(): void {
 	if (tray) {
 		console.warn("[Tray] Already initialized");
-		return;
-	}
-
-	if (process.platform !== "darwin") {
 		return;
 	}
 
